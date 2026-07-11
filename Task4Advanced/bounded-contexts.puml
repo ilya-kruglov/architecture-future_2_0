@@ -1,0 +1,77 @@
+@startuml
+!define RECTANGLE class
+
+title Bounded Contexts «Будущее 2.0»
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam defaultFontSize 12
+
+' === КОНТЕКСТЫ ===
+package "Клиники" <<bounded_context>> {
+  rectangle "Пациенты" as patients
+  rectangle "Приёмы" as appointments
+  rectangle "Медицинские карты" as medical_records
+  rectangle "Исследования" as examinations
+}
+
+package "Финтех" <<bounded_context>> {
+  rectangle "Кредиты" as loans
+  rectangle "Счета" as accounts
+  rectangle "Платежи" as payments
+  rectangle "Клиенты (фин.)" as fintech_clients
+}
+
+package "ИИ-сервисы" <<bounded_context>> {
+  rectangle "Модели" as models
+  rectangle "Обработка изображений" as image_processing
+  rectangle "Диагностика" as diagnostics
+  rectangle "Предсказания" as predictions
+}
+
+package "Аналитика" <<bounded_context>> {
+  rectangle "Витрина данных" as data_mart
+  rectangle "Отчёты" as reports
+  rectangle "Каталог данных" as data_catalog
+  rectangle "Дашборды" as dashboards
+}
+
+package "Интеграции" <<bounded_context>> {
+  rectangle "ACL" as acl
+  rectangle "Адаптеры внешних систем" as adapters
+  rectangle "Трансформации" as transformations
+}
+
+' === СВЯЗИ МЕЖДУ КОНТЕКСТАМИ ===
+patients <--> appointments
+appointments <--> medical_records
+appointments <--> examinations
+
+loans <--> accounts
+accounts <--> payments
+fintech_clients <--> loans
+fintech_clients <--> accounts
+
+models <--> image_processing
+image_processing <--> diagnostics
+diagnostics <--> predictions
+
+data_mart <--> reports
+reports <--> dashboards
+data_mart <--> data_catalog
+
+acl <--> adapters
+adapters <--> transformations
+
+' === КРОСС-КОНТЕКСТНЫЕ СВЯЗИ ===
+appointments --> diagnostics : "направляет на ИИ-диагностику"
+examinations --> image_processing : "передаёт снимки"
+diagnostics --> data_mart : "обогащает витрину"
+payments --> data_mart : "пополняет витрину"
+loans --> data_mart : "пополняет витрину"
+patients --> fintech_clients : "интеграция для финтех-услуг"
+acl --> appointments : "интеграция с легаси"
+acl --> loans : "интеграция с легаси"
+
+@enduml
