@@ -1,0 +1,100 @@
+@startuml
+title Event Storming: Ключевые события и потоки
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam defaultFontSize 11
+
+' === СОБЫТИЯ (оранжевые стикеры) ===
+rectangle "Пациент зарегистрирован" as ev1 #orange
+rectangle "Приём создан" as ev2 #orange
+rectangle "Диагноз поставлен" as ev3 #orange
+rectangle "Исследование назначено" as ev4 #orange
+rectangle "Исследование выполнено" as ev5 #orange
+rectangle "Результат ИИ получен" as ev6 #orange
+rectangle "Кредитный договор создан" as ev7 #orange
+rectangle "Платёж проведён" as ev8 #orange
+rectangle "Счёт открыт" as ev9 #orange
+rectangle "Отчёт сформирован" as ev10 #orange
+rectangle "Данные обновлены в витрине" as ev11 #orange
+
+' === КОМАНДЫ (синие стикеры) ===
+rectangle "Зарегистрировать пациента" as cmd1 #lightblue
+rectangle "Создать приём" as cmd2 #lightblue
+rectangle "Назначить исследование" as cmd3 #lightblue
+rectangle "Запустить ИИ-диагностику" as cmd4 #lightblue
+rectangle "Создать кредит" as cmd5 #lightblue
+rectangle "Провести платёж" as cmd6 #lightblue
+rectangle "Сформировать отчёт" as cmd7 #lightblue
+
+' === АГРЕГАТЫ (жёлтые стикеры) ===
+rectangle "Пациент" as agg1 #yellow
+rectangle "Приём" as agg2 #yellow
+rectangle "Исследование" as agg3 #yellow
+rectangle "Кредит" as agg4 #yellow
+rectangle "Счёт" as agg5 #yellow
+rectangle "Витрина данных" as agg6 #yellow
+
+' === ПОТОКИ ===
+cmd1 --> agg1 : "создаёт"
+agg1 --> ev1 : "публикует"
+
+ev1 --> cmd2 : "триггерит"
+cmd2 --> agg2 : "создаёт"
+agg2 --> ev2 : "публикует"
+
+ev2 --> cmd3 : "триггерит"
+cmd3 --> agg3 : "создаёт"
+agg3 --> ev4 : "публикует"
+
+ev4 --> cmd4 : "триггерит"
+cmd4 --> agg3 : "запускает"
+agg3 --> ev5 : "публикует"
+
+ev5 --> cmd4 : "триггерит повторно"
+cmd4 --> agg3 : "завершает"
+agg3 --> ev6 : "публикует"
+
+ev6 --> ev3 : "обогащает"
+ev3 --> cmd5 : "триггерит (если кредит)"
+cmd5 --> agg4 : "создаёт"
+agg4 --> ev7 : "публикует"
+
+ev7 --> cmd6 : "триггерит"
+cmd6 --> agg5 : "изменяет"
+agg5 --> ev8 : "публикует"
+agg5 --> ev9 : "публикует"
+
+ev1 --> agg6 : "обновляет"
+ev2 --> agg6 : "обновляет"
+ev3 --> agg6 : "обновляет"
+ev6 --> agg6 : "обновляет"
+ev7 --> agg6 : "обновляет"
+ev8 --> agg6 : "обновляет"
+ev9 --> agg6 : "обновляет"
+
+agg6 --> ev11 : "публикует"
+
+ev11 --> cmd7 : "триггерит"
+cmd7 --> agg6 : "формирует"
+agg6 --> ev10 : "публикует"
+
+' === КОМАНДЫ/СОБЫТИЯ ВНЕШНИХ СИСТЕМ ===
+rectangle "Внешний платёж" as ext_payment #lightgrey
+rectangle "Данные от фармы" as ext_pharma #lightgrey
+rectangle "Данные оборудования" as ext_hardware #lightgrey
+
+ext_payment --> ev8 : "подтверждает"
+ext_pharma --> agg6 : "обогащает"
+ext_hardware --> agg6 : "обогащает"
+
+' === ПОДПИСЧИКИ ===
+legend top right
+  | Цвет | Описание |
+  | orange | Событие |
+  | lightblue | Команда |
+  | yellow | Агрегат |
+  | lightgrey | Внешняя система |
+endlegend
+
+@enduml
