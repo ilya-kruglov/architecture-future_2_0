@@ -1,0 +1,106 @@
+@startuml
+!define RECTANGLE class
+
+title Целевая архитектура «Будущее 2.0» (горизонт 3 года)
+
+' Настройка отображения
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam defaultFontSize 12
+
+' === АКТОРЫ (Пользователи) ===
+actor "Оператор клиники" as operator
+actor "Бизнес-аналитик" as analyst
+actor "Финтех-сотрудник" as fintech_user
+actor "Внешний партнёр" as external_partner
+
+' === ВНЕШНИЕ СИСТЕМЫ ===
+rectangle "Старый DWH (SQL Server)" as legacy_dwh #lightgrey
+rectangle "ESB (Camel)" as esb #lightgrey
+rectangle "Банковская система" as bank_system #lightblue
+rectangle "ИИ-сервисы (Python)" as ai_services #lightblue
+rectangle "Фарма-система" as pharma_system #lightblue
+rectangle "Производитель оборудования" as hardware_manufacturer #lightblue
+
+' === ЦЕЛЕВЫЕ КОНТЕЙНЕРЫ ===
+package "Событийная платформа" {
+  component "Apache Kafka" as event_bus
+}
+
+package "Потоковая обработка" {
+  component "Apache Flink" as stream_processor
+}
+
+package "Домен Клиники" {
+  component "Java/Go + PostgreSQL" as domain_kliniki
+}
+
+package "Домен Финтех" {
+  component "Java/Go + PostgreSQL" as domain_fintech
+}
+
+package "Домен ИИ" {
+  component "Python + ML" as domain_ai
+}
+
+package "Домен Аналитики" {
+  component "ClickHouse + Data Catalog" as domain_analytics
+}
+
+package "Портал самообслуживания" {
+  component "React + BI (Superset/Power BI)" as self_service_portal
+}
+
+package "Антикоррупционный слой" {
+  component "API-адаптеры" as acl_layer
+}
+
+package "Слой приёма данных" {
+  component "Debezium + Kafka Connect" as data_ingestion
+}
+
+package "Каталог данных" {
+  component "Amundsen / DataHub" as data_catalog
+}
+
+' === СВЯЗИ (пользователи -> системы) ===
+operator --> domain_kliniki : "REST/GraphQL"
+analyst --> self_service_portal : "HTTPS"
+fintech_user --> domain_fintech : "REST"
+external_partner --> domain_analytics : "API"
+
+' === ВНУТРЕННИЕ ПОТОКИ ДАННЫХ ===
+domain_kliniki --> event_bus : "публикует события"
+domain_fintech --> event_bus : "публикует события"
+domain_ai --> event_bus : "публикует/подписывается"
+event_bus --> stream_processor : "потоки событий"
+stream_processor --> domain_analytics : "обогащённые данные"
+stream_processor --> data_ingestion : "приём данных"
+domain_analytics --> self_service_portal : "данные для отчётов"
+data_catalog --> self_service_portal : "метаданные"
+data_ingestion --> event_bus : "публикует события"
+
+' === ACL и ЛЕГАСИ ===
+acl_layer --> legacy_dwh : "JDBC"
+acl_layer --> esb : "JMS/HTTP"
+acl_layer --> event_bus : "преобразует запросы"
+
+' === РЕГИСТРАЦИЯ МЕТАДАННЫХ ===
+domain_analytics --> data_catalog : "регистрирует схемы"
+
+' === ИНТЕГРАЦИЯ С ВНЕШНИМИ СИСТЕМАМИ ===
+domain_analytics --> bank_system : "Kafka Connect"
+domain_analytics --> ai_services : "Kafka"
+domain_analytics --> pharma_system : "API (через ACL)"
+domain_analytics --> hardware_manufacturer : "MQTT/Kafka"
+
+' === ЛЕГЕНДА ===
+legend top right
+  | Цвет | Значение |
+  | lightgrey | Легаси-системы (будут выведены) |
+  | lightblue | Внешние системы |
+  | white     | Новые целевые системы |
+endlegend
+
+@enduml
