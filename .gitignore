@@ -32,3 +32,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Task2Advanced
+Task2Advanced/envs/*/terraform.tfvars
+Task2Advanced/envs/*/.terraform/
+Task2Advanced/envs/*/tfplan
+Task2Advanced/envs/*/.terraform.lock.hcl
